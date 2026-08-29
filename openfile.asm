@@ -1,29 +1,21 @@
 global openfile, filebuffer
+
 section .data
-	error_message: db "Please pass in file name\n"
-	error_message_length equ $ - error_message 
+	noarg_err_msg: db "Please pass in file name\n"
+	noarg_err_msg_length equ $ - noarg_err_msg 
+
+	err_opening_file_msg: db "Error opening file\n"
+	err_opening_file_msg_len equ $ - err_opening_file_msg
+
+	offset: dq 0
+	
 section .bss
 	filebuffer: resb 4096
-	filename: resb 16
-	filedescriptor: resb 1
+	filedescriptor: resb 8
+	totalfileread: resb 8
 
-; constants
-	;file descriptors
-	%define STDIN 0
-	%define STDOUT 1
-	
-	;system call identifiers
-	%define SYS_OPEN 2
-	%define SYS_READ 0
-	%define SYS_WRITE 1
-	%define SYS_CLOSE 3
-	%define SYS_EXIT 60
-	
-	;constant parameters
-	%define READONLY, 0
 
 section .text
-
 openfile:
 	;check if users pass any argument
 	mov rdi, [rsp]
@@ -32,14 +24,17 @@ openfile:
 	
 	;save pointer to the first element of the array of argument in rsi
 	mov rsi, [rsp + 16]
-	mov [filename], rsi
 
 	;open and read file data
 	mov rax, SYS_OPEN
-	mov rdi, [filename]
+	mov rdi, rsi
 	mov rsi, READONLY
 	mov rdx, 0
 	syscall
+	
+
+	cmp rax, 0
+	jl error_opening_file
 	
 	mov [filedescriptor], rax
 	;read file contents into buffer
@@ -47,28 +42,40 @@ readfile:
 	mov rax, SYS_READ		
 	mov rdi, [filedescriptor] 
 	mov rsi, filebuffer
-	mov rdx, 4096
+	add rsi, [offset]
+	mov rdx, 4096 
+	sub rdx, [offset]
 	syscall
+
+	add [offset], rax
 	
+	cmp qword [offset], 4096
+	jge closefile
+ 
 	cmp rax, 0
 	jg readfile
-	
+
 closefile:
 	enter 0, 0
 	
+	mov rax, [offset]
+	mov [totalfileread], rax
+	
+
 	;close filie
 	mov rax, SYS_CLOSE
 	mov rdi, [filedescriptor]
 	syscall
 	
 	;return
+	mov rax, [filebuffer]
 	leave
 	ret	
 noarguments:
 	mov rax, SYS_WRITE
 	mov rdi, STDOUT
-	mov rsi, error_message
-	mov rdx, error_message_length
+	mov rsi, noarg_err_msg
+	mov rdx, noarg_err_msg_len
 	syscall
 
 	;exit
@@ -76,4 +83,14 @@ noarguments:
 	mov rdi, 1
 	syscall
 	
-	
+error_opening_file:
+	mov rax, SYS_WRITE
+	mov rdi, STDOUT
+	mov rsi, err_opening_file_msg
+	mov rdx, err_opening_file_msg_len
+	syscall
+
+	;exit
+	mov rax, SYS_EXIT
+	mov rdi, 1
+	syscall

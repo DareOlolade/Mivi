@@ -4,13 +4,6 @@ section .bss
 	 new_terminal_settings: resb 60
 	
 ; constants
-	%define STDIN 0
-	
-	;system call identifiers
-	%define SYS_IOCTL 16
-	%define SYS_READ 0
-	%define SYS_EXIT 60
-
 	;Terminal related ioctl parameters
 	%define TCGETS 0x5401
 	%define TCSETS 0x5402
@@ -72,8 +65,6 @@ changesettings:
 
 restoresettings:
 	enter 0, 0
-	
-	;restore back old settings
 	mov rax, SYS_IOCTL
 	mov rdi, STDIN
 	mov rsi, TCSETS

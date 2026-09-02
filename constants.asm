@@ -1,4 +1,3 @@
-global STDOUT, STDIN, SYS_READ, SYS_WRITE, SYS_OPEN, SYS_CLOSE, SYS_IOCTL, SYS_EXIT, READONLY
 
 ;file descriptors
 %define STDOUT 1

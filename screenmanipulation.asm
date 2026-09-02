@@ -1,3 +1,4 @@
+%include "constants.asm"
 global clearscreen, writetoscreen, movecursor
 
 section .data
@@ -32,12 +33,15 @@ clearscreen:
 writetoscreen:
 	enter 0, 16
 	; rdi would hold screen buffer
+	; rsi holds how much to write
+
 	mov [rbp - 8], rdi
+	mov [rbp -16], rsi
 
 	mov rax, SYS_WRITE
 	mov rdi, STDOUT
 	mov rsi, [rbp-8]
-	mov rdx, 4096
+	mov rdx, [rbp - 16]
 	syscall
 
 	leave

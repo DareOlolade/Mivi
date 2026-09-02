@@ -1,4 +1,5 @@
-global openfile, filebuffer
+%include "constants.asm"
+global openfile, filebuffer, totalfileread
 
 section .data
 	noarg_err_msg: db "Please pass in file name\n"
@@ -68,7 +69,7 @@ closefile:
 	syscall
 	
 	;return
-	mov rax, [filebuffer]
+	mov rax, filebuffer
 	leave
 	ret	
 noarguments:

@@ -7,10 +7,6 @@ section .data
 	ansi_clear db 27,"[2J", 27, "[H"
 	ansi_clear_len equ $ - ansi_clear
 	
-	esc_start db 27, "["
-	esc_middle db ";"
-	esc_end db "H"
-
 section .bss
 	ansi_move_buffer resb 32  ;holds the final string that represent cursor position
 	number_buffer resb 10 ; for integer to ascii conversion
@@ -31,7 +27,7 @@ clearscreen:
 	ret
 
 writetoscreen:
-	enter 0, 16
+	enter 16, 0
 	; rdi would hold screen buffer
 	; rsi holds how much to write
 
@@ -48,7 +44,7 @@ writetoscreen:
 	ret
 
 movecursor:
-	enter 0, 16
+	enter 16, 0
 	
 	push rsi
 	;curso position
@@ -71,7 +67,8 @@ movecursor:
 	mov[rdx], sil
 	inc rdx
 	inc r8
-	cmp r8, number_buffer+10
+	lea rcx, [number_buffer + 10]
+	cmp r8, rcx
 	jl .loop_x_coordinate
 	
 	mov byte [rdx], ';'
@@ -86,7 +83,8 @@ movecursor:
 	mov[rdx], sil
 	inc rdx
 	inc r8
-	cmp r8, number_buffer+10
+	lea rcx, [number_buffer + 10]
+	cmp r8, rcx
 	jl .loop_y_coordinate
 
 	mov byte [rdx], 'H'
@@ -105,7 +103,8 @@ movecursor:
 	ret
 
 int_to_ascii:
-	enter 0, 16
+	enter 0, 0
+	push rbx
 	push rdx
 
 	mov rbx, 10
@@ -122,6 +121,7 @@ int_to_ascii:
 	jnz .push_digits
 	
 	pop rdx
+	pop rbx
 	leave
 	ret
 	
